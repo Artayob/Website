@@ -1,0 +1,20 @@
+.liquid-glass-card {
+  background-color: rgba(255, 255, 255, 0.1); /* Very transparent white */
+  backdrop-filter: blur(20px) saturate(200%); /* Strong blur and saturation */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+  padding: 24px;
+  color: white; /* Or another light color */
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5); /* Subtle text shadow for legibility */
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease; /* For hover effects */
+}
+
+/* Optional hover effect */
+.liquid-glass-card:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.02);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+}
