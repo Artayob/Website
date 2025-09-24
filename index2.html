@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCR Ride Bookings: An Interactive Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+            min-height: 100vh;
+        }
+
+        /* Core "Liquid Glass" style */
+        .liquid-glass-panel {
+            background-color: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(20px) saturate(200%);
+            -webkit-backdrop-filter: blur(20px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
+        }
+        
+        .liquid-glass-nav {
+            background-color: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px) saturate(200%);
+            -webkit-backdrop-filter: blur(20px) saturate(200%);
+            border-radius: 20px;
+        }
+
+        /* Adjusting colors for text and headings for contrast */
+        .container {
+            color: #333;
+        }
+        
+        h1, h2, h3, h4 {
+            color: #111;
+            text-shadow: none;
+        }
+
+        p, ul {
+            color: #555;
+        }
+        
+        /* **Corrected Transparent Glass Button styles** */
+        .nav-button {
+            background-color: rgba(255, 255, 255, 0.2); /* Semi-transparent background */
+            backdrop-filter: blur(10px) saturate(150%);
+            -webkit-backdrop-filter: blur(10px) saturate(150%);
+            color: #555;
+            border: 1px solid rgba(255, 255, 255, 0.3); /* Subtle white border */
+            transition: all 0.3s ease;
+        }
+
+        .nav-button.active {
+            background-color: rgba(255, 255, 255, 0.8); /* Becomes more opaque when active */
+            border-color: rgba(255, 255, 255, 1);
+            color: #111;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-button:hover:not(.active) {
+            background-color: rgba(255, 255, 255, 0.4); /* Increases transparency on hover */
+            color: #111;
+        }
+
+        /* Chart-specific styles */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 45vh;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body class="text-white">
+
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold">NCR Ride Bookings: An Interactive Analysis</h1>
+            <p class="mt-2">An interactive dashboard with a modern liquid glass interface.</p>
+        </header>
+
+        <nav class="sticky top-0 z-50 liquid-glass-nav p-4 mb-8 shadow-md">
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+                <button data-target="overview" class="nav-button active px-4 py-2 rounded-full font-semibold">Key Metrics</button>
+                <button data-target="characteristics" class="nav-button px-4 py-2 rounded-full font-semibold">Ride DNA</button>
+                <button data-target="operations" class="nav-button px-4 py-2 rounded-full font-semibold">Operations Deep-Dive</button>
+                <button data-target="customers" class="nav-button px-4 py-2 rounded-full font-semibold">Customer Insights</button>
+                <button data-target="summary" class="nav-button px-4 py-2 rounded-full font-semibold">Summary</button>
+            </div>
+        </nav>
+
+        <main id="main-content">
+
+            <section id="overview" class="content-section space-y-8">
+                <div class="text-center liquid-glass-panel p-6">
+                    <h2 class="text-2xl font-bold">Project at a Glance</h2>
+                    <p class="mt-1 max-w-2xl mx-auto">This overview summarizes the key performance indicators from the 8,700 analyzed ride bookings, providing a high-level snapshot of the business.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="liquid-glass-panel p-6 text-center">
+                        <h3 class="font-semibold">Total Analyzed Bookings</h3>
+                        <p class="text-4xl font-bold text-gray-700 mt-2">8,700</p>
+                    </div>
+                    <div class="liquid-glass-panel p-6 text-center">
+                        <h3 class="font-semibold">Average Booking Value</h3>
+                        <p class="text-4xl font-bold text-gray-700 mt-2">$175</p>
+                    </div>
+                    <div class="liquid-glass-panel p-6 text-center">
+                        <h3 class="font-semibold">Median Booking Value</h3>
+                        <p class="text-4xl font-bold text-gray-700 mt-2">$120</p>
+                    </div>
+                    <div class="liquid-glass-panel p-6 text-center">
+                        <h3 class="font-semibold">Correlation (Dist vs. Value)</h3>
+                        <p class="text-4xl font-bold text-gray-700 mt-2">0.32</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="characteristics" class="content-section hidden space-y-12">
+                <div class="liquid-glass-panel p-6">
+                    <h2 class="text-2xl font-bold text-center">The DNA of a Ride</h2>
+                    <p class="mt-2 text-center max-w-3xl mx-auto">This section breaks down the core characteristics of the rides, from how much customers are paying to which vehicle types are most reliable.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center liquid-glass-panel p-8">
+                    <div class="lg:col-span-2">
+                        <h3 class="text-xl font-semibold mb-2">Fare Distribution</h3>
+                        <p class="mb-4">The majority of rides are low-cost, everyday trips. The analysis shows that 74% of all bookings are for fares under $200, highlighting the service's role as a go-to for routine travel.</p>
+                    </div>
+                    <div class="lg:col-span-3">
+                        <div class="chart-container">
+                            <canvas id="fareDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center liquid-glass-panel p-8">
+                    <div class="lg:col-span-3 lg:order-last">
+                        <div class="chart-container">
+                            <canvas id="completionRateChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 lg:order-first">
+                        <h3 class="text-xl font-semibold mb-2">Vehicle Performance</h3>
+                        <p class="mb-4">Not all vehicles perform equally. The data reveals a significant difference in reliability, measured by completion rate. eBikes lead with an 80% completion rate, whereas Cabs lag at 65%.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="operations" class="content-section hidden space-y-12">
+                <div class="liquid-glass-panel p-6">
+                    <h2 class="text-2xl font-bold text-center">Operations Deep-Dive</h2>
+                    <p class="mt-2 text-center max-w-3xl mx-auto">Understanding operational efficiency is key. Here, we explore the reasons behind cancellations and identify service bottlenecks during peak hours.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div class="liquid-glass-panel p-8">
+                        <h3 class="text-xl font-semibold mb-2">Why are Rides Cancelled?</h3>
+                        <p class="mb-4">Cancellations disrupt service for everyone. The data shows distinct reasons depending on who cancels. Customers most often cancel due to a "Change of Plans," while drivers are most affected by "Traffic/Delay."</p>
+                        <div class="chart-container">
+                             <canvas id="cancellationReasonsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="liquid-glass-panel p-8">
+                        <h3 class="text-xl font-semibold mb-2">Peak Hour Bottlenecks</h3>
+                        <p class="mb-4">Service quality is under pressure during morning and evening rush hours. The analysis shows that the busiest hours (8-9 AM & 6-8 PM) have the longest average wait and travel times.</p>
+                        <div class="chart-container">
+                             <canvas id="peakHoursChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="customers" class="content-section hidden space-y-8">
+                <div class="liquid-glass-panel p-6">
+                    <h2 class="text-2xl font-bold text-center">Customer Insights & Churn</h2>
+                    <p class="mt-2 text-center max-w-3xl mx-auto">This section focuses on customer behavior, highlighting loyalty trends and identifying customers at risk of churn.</p>
+                </div>
+
+                <div class="liquid-glass-panel p-8">
+                    <h3 class="text-xl font-semibold">The Churn Challenge</h3>
+                    <p class="mt-4">The analysis revealed two distinct customer groups. Customers who joined in 2023 show strong loyalty, while customers acquired in 2024 exhibit a significant drop-off after their first few rides.</p>
+                    <div class="mt-6 border-t border-gray-300 pt-6">
+                        <h4 class="font-semibold text-red-500">High Churn Risk Identified</h4>
+                        <p class="mt-2">A segment of customers from 2023 with low booking counts and no recent activity has been classified as "High Risk." This group is a prime target for a re-engagement campaign.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="summary" class="content-section hidden space-y-8">
+                <div class="liquid-glass-panel p-6">
+                    <h2 class="text-2xl font-bold text-center">Summary & Recommendations</h2>
+                    <p class="mt-2 text-center max-w-3xl mx-auto">This project demonstrates the power of SQL to transform raw data into a clear business narrative. The analysis has uncovered key strengths, weaknesses, and opportunities.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="liquid-glass-panel p-8">
+                        <h3 class="text-xl font-semibold">Key Findings</h3>
+                        <ul class="list-disc list-inside mt-4 space-y-3">
+                            <li><span class="font-semibold">Low-fare rides</span> are the foundation of the business, but high-value trips are crucial for revenue.</li>
+                            <li><span class="font-semibold">Operational bottlenecks</span> during peak hours negatively impact service quality and wait times.</li>
+                            <li><span class="font-semibold">Vehicle reliability varies,</span> with Cabs showing a significantly lower completion rate than other types.</li>
+                            <li><span class="font-semibold">Customer retention is a growing concern,</span> especially among newly acquired users.</li>
+                        </ul>
+                    </div>
+                    <div class="liquid-glass-panel p-8">
+                        <h3 class="text-xl font-semibold">Actionable Recommendations</h3>
+                        <ul class="list-disc list-inside mt-4 space-y-3">
+                            <li><span class="font-semibold">Optimize the Cab Service:</span> Investigate the root causes of the high cancellation rate for Cabs to improve driver and customer experience.</li>
+                            <li><span class="font-semibold">Mitigate Peak Hour Strain:</span> Implement driver incentives or dynamic pricing during rush hours to better match supply with demand.</li>
+                            <li><span class="font-semibold">Launch a Retention Program:</span> Create a loyalty or re-engagement campaign targeting new users and those identified as "High Risk" to reduce churn.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const navButtons = document.querySelectorAll('.nav-button');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetId = button.dataset.target;
+                    
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    contentSections.forEach(section => {
+                        if (section.id === targetId) {
+                            section.classList.remove('hidden');
+                        } else {
+                            section.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            // New chart colors for the soothing white theme
+            const chartColors = {
+                bar: 'rgba(52, 73, 94, 0.7)',
+                border: 'rgba(52, 73, 94, 1)',
+                line: 'rgba(46, 204, 113, 0.8)',
+                pie: ['rgba(41, 128, 185, 0.8)', 'rgba(52, 152, 219, 0.8)', 'rgba(192, 57, 43, 0.8)', 'rgba(149, 165, 166, 0.8)'],
+                text: '#555',
+                grid: 'rgba(0, 0, 0, 0.1)',
+            };
+            
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: chartColors.text,
+                            font: {
+                                size: 14,
+                            },
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        titleColor: '#333',
+                        bodyColor: '#555',
+                        borderColor: 'rgba(0, 0, 0, 0.1)',
+                        borderWidth: 1,
+                        padding: 10,
+                        displayColors: true,
+                    },
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: chartColors.grid,
+                        },
+                        ticks: {
+                            color: chartColors.text,
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                        },
+                        ticks: {
+                            color: chartColors.text,
+                        }
+                    }
+                }
+            };
+            
+            // Chart 1: Fare Distribution
+            const fareCtx = document.getElementById('fareDistributionChart').getContext('2d');
+            new Chart(fareCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['< $100', '$100-199', '$200-299', '>= $300'],
+                    datasets: [{
+                        label: 'Percentage of Rides',
+                        data: [58.0, 23.5, 10.6, 7.9],
+                        backgroundColor: chartColors.bar,
+                        borderColor: chartColors.border,
+                        borderWidth: 2,
+                        borderRadius: 5,
+                    }]
+                },
+                options: { ...chartOptions, indexAxis: 'y' }
+            });
+
+            // Chart 2: Vehicle Completion Rate
+            const completionCtx = document.getElementById('completionRateChart').getContext('2d');
+            new Chart(completionCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['eBike', 'Auto', 'Go Mini', 'Cab'],
+                    datasets: [{
+                        label: 'Completion Rate (%)',
+                        data: [80, 78, 75, 65],
+                        backgroundColor: [
+                            chartColors.bar,
+                            chartColors.bar,
+                            chartColors.bar,
+                            'rgba(231, 76, 60, 0.7)'
+                        ],
+                        borderColor: [
+                            chartColors.border,
+                            chartColors.border,
+                            chartColors.border,
+                            'rgba(231, 76, 60, 1)'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 5,
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Chart 3: Cancellation Reasons
+            const cancelCtx = document.getElementById('cancellationReasonsChart').getContext('2d');
+            new Chart(cancelCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Customer: Change of Plans', 'Driver: Traffic/Delay', 'System: Vehicle Breakdown', 'Other'],
+                    datasets: [{
+                        label: 'Cancellation Reasons',
+                        data: [45, 30, 15, 10],
+                        backgroundColor: chartColors.pie,
+                        borderColor: 'rgba(255, 255, 255, 0.8)',
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: chartColors.text,
+                            }
+                        },
+                        tooltip: chartOptions.plugins.tooltip
+                    }
+                }
+            });
+
+            // Chart 4: Peak Hours
+            const peakHoursCtx = document.getElementById('peakHoursChart').getContext('2d');
+            new Chart(peakHoursCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['12a-6a', '7-9a', '10a-4p', '5-8p', '9p-11p'],
+                    datasets: [{
+                        type: 'bar',
+                        label: 'Ride Count',
+                        data: [500, 2500, 3000, 2200, 500],
+                        backgroundColor: chartColors.bar,
+                        borderColor: chartColors.border,
+                        yAxisID: 'y',
+                        order: 2
+                    }, {
+                        type: 'line',
+                        label: 'Avg Wait Time (VTAT mins)',
+                        data: [5.2, 13.4, 8.1, 14.2, 6.5],
+                        borderColor: chartColors.line,
+                        backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                        pointBackgroundColor: chartColors.line,
+                        pointBorderColor: 'white',
+                        tension: 0.3,
+                        yAxisID: 'y1',
+                        order: 1
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Number of Rides',
+                                color: chartColors.text
+                            },
+                             grid: {
+                                color: chartColors.grid,
+                            },
+                             ticks: {
+                                color: chartColors.text,
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Avg Wait Time (mins)',
+                                color: chartColors.text
+                            },
+                            grid: {
+                                drawOnChartArea: false, 
+                            },
+                             ticks: {
+                                color: chartColors.text,
+                            },
+                        },
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
